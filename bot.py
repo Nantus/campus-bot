@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 
 def get_token() -> str:
     with open("tg_token.txt", "r", encoding="utf-8") as file:
-        return file.read()
+        return file.read().strip()
 
 
 # Запуск бота

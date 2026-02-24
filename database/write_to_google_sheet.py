@@ -15,7 +15,7 @@ SAMPLE_RANGE_NAME = "Default"
 
 def get_spreadsheet_id() -> str:
     with open("spreadsheet_id.txt", "r", encoding="utf-8") as file:
-        return file.read()
+        return file.read().strip()
 
 
 def write_to_google_sheet(data: list):

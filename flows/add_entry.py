@@ -68,6 +68,16 @@ async def second_pilot_name(message: types.Message, state: FSMContext):
 async def student_name(message: types.Message, state: FSMContext):
     await state.update_data(student_name=message.text)
     await message.answer(
+        "Напиши нік в Телеграмі студента, якому ти проводив зустріч.",
+        reply_markup=ReplyKeyboardRemove(),
+    )
+    await state.set_state(AddStatEntryFlowStates.waiting_for_student_tg)
+
+
+@add_entry_router.message(AddStatEntryFlowStates.waiting_for_student_tg)
+async def student_tg(message: types.Message, state: FSMContext):
+    await state.update_data(student_tg=message.text)
+    await message.answer(
         "Тепер обери, що це була за зустріч?",
         reply_markup=TypeOfMeetingKeyboard().get_markup(),
     )
