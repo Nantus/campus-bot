@@ -7,3 +7,5 @@
 /spreadsheet_id.txt
 /logs/
 /ssh
+/fsm_states.db
+/users_data.db

@@ -1,9 +1,12 @@
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher
+from aiogram_sqlite_storage.sqlitestore import SQLStorage
 
 from flows.registration import registragion_router
-from flows.add_entry import add_entry_router
+from flows.cancel import cancel_router 
+from flows.add_new_entry.add_entry import add_entry_router
+from flows.give_a_new_contact.give_a_new_contact import give_a_new_contact_router 
 from logger.middlewares_logging import LoggingMiddleware 
 from logging.handlers import RotatingFileHandler
 
@@ -33,11 +36,14 @@ def get_token() -> str:
 
 async def main():
     bot = Bot(token=get_token())
-    dp = Dispatcher()
+    storage = SQLStorage("fsm_states.db")
+    dp = Dispatcher(storage=storage)
 
     dp.message.middleware(LoggingMiddleware())
+    dp.include_router(cancel_router)
     dp.include_router(registragion_router)
     dp.include_router(add_entry_router)
+    dp.include_router(give_a_new_contact_router)
 
     await dp.start_polling(bot)
 

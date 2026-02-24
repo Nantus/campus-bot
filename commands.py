@@ -8,6 +8,8 @@ class BotCommands(Enum):
     Help = "❓ Допомога"
     Settings = "⚙️ Налаштування"
     AddStatEntry = "Додати запис про зустріч"
+    GiveANewContact = "Дайте мені новий контакт"
+    Cancel = "Скасувати"
 
 
 class EnumFilter(Filter):

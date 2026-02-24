@@ -2,6 +2,8 @@ from enum import Enum
 from aiogram.types import ReplyKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
+from commands import BotCommands
+
 
 class TypeOfMeetingKeyboardReplies(Enum):
     Worldview = "Cвітогляд"
@@ -17,6 +19,7 @@ class TypeOfMeetingKeyboard(ReplyKeyboardBuilder):
         self.button(text=TypeOfMeetingKeyboardReplies.Photoquest.value)
         self.button(text=TypeOfMeetingKeyboardReplies.Stepup.value)
         self.button(text=TypeOfMeetingKeyboardReplies.Other.value)
+        self.button(text=BotCommands.Cancel.value)
         self.adjust(2) 
 
     def get_markup(self, resize_keyboard: bool = True, input_field_placeholder: str = "Оберіть пункт меню...") -> ReplyKeyboardMarkup:

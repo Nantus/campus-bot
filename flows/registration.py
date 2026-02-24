@@ -1,44 +1,36 @@
-from aiogram import Router, types
+from aiogram import Bot, Router, types
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 
 from chat_states import BotStates
+from flows.main_menu import enter_main_menu
 from keyboards.main_keyboard import MainKeyboard 
+from database.database import db
 
 registragion_router = Router()
 
 
-# @registragion_router.message(CommandStart())
-# async def cmd_start(message: types.Message, state: FSMContext):
-#     # Перевіряємо, чи ми вже знаємо ім'я (в реальних проектах тут запит до БД)
-#     user_data = await state.get_data()
-    
-#     if "name" in user_data:
-#         await message.answer(f"Привіт знову, {user_data['name']}! Чим допомогти?")
-#     else:
-#         await message.answer("Привіт! Я твій бот. Як мені до тебе звертатися?")
-#         # Переводимо користувача у стан очікування імені
-#         await state.set_state(BotStates.waiting_for_name)
+@registragion_router.message(CommandStart())
+async def cmd_start(message: types.Message, state: FSMContext, bot: Bot):
+    stored_name = db.get_name(message.from_user.id if message.from_user else 0)
+
+    if stored_name:
+        await message.answer(f"Привіт знову, {stored_name}! Чим допомогти?")
+        await enter_main_menu(message=message, state=state, bot=bot)
+    else:
+        await message.answer("Привіт! Я твій бот. Як мені до тебе звертатися?")
+        await state.set_state(BotStates.waiting_for_name)
 
 
 @registragion_router.message(BotStates.waiting_for_name)
-async def process_name(message: types.Message, state: FSMContext):
-    await state.update_data(name=message.text)
-    
-    # Надсилаємо повідомлення разом із кнопками
-    await message.answer(
-        f"Приємно познайомитись, {message.text}! Тепер у тебе є меню:",
-        reply_markup=MainKeyboard().get_markup(),
-    )
-    
-    await state.set_state(BotStates.waiting_for_entry)
+async def process_name(message: types.Message, state: FSMContext, bot: Bot):
+    user_name = message.text
+    user_id = message.from_user.id if message.from_user else 0
 
-
-@registragion_router.message(CommandStart())
-async def cmd_start(message: types.Message, state: FSMContext):
-    await message.answer(
-        f"Привіт! У тебе є меню:",
-        reply_markup=MainKeyboard().get_markup(),
-    )
+    db.set_name(user_id, user_name)
+    await state.update_data(name=user_name)
     
-    await state.set_state(BotStates.waiting_for_entry)
+    await message.answer(
+        f"Приємно познайомитись, {user_name}!",
+    )
+    await enter_main_menu(message=message, state=state, bot=bot)
