@@ -7,6 +7,8 @@ class AddStatEntryFlowStates(StatesGroup):
     waiting_for_second_pilot_name = State()
     waiting_for_student_name = State()
     waiting_for_student_tg = State()
+    waiting_for_was_there_a_call = State()
+    waiting_for_was_there_gospel = State()
     waiting_for_meeting_type = State()
     waiting_for_step_up_number = State()
     waiting_for_meeting_name = State()

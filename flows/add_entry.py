@@ -9,7 +9,9 @@ from flows.states import AddStatEntryFlowStates
 from keyboards.is_first_pilot_keyboard import IsFirstPilotKeyboard, IsFirstPilotKeyboardReplies
 from keyboards.main_keyboard import MainKeyboard
 from keyboards.stepup_number_keyboard import StepUpNumberKeyboard
-from keyboards.type_of_meeting_keyboard import TypeOfMeetingKeyboard, TypeOfMeetingKeyboardReplies 
+from keyboards.type_of_meeting_keyboard import TypeOfMeetingKeyboard, TypeOfMeetingKeyboardReplies
+from keyboards.was_there_a_call_keyboard import WasThereACallKeyboard
+from keyboards.was_there_gospel_keyboard import WasThereGospelKeyboard
 
 add_entry_router = Router()
 
@@ -78,6 +80,26 @@ async def student_name(message: types.Message, state: FSMContext):
 async def student_tg(message: types.Message, state: FSMContext):
     await state.update_data(student_tg=message.text)
     await message.answer(
+        "Чи був на цій зустрічі заклик до покаяння?",
+        reply_markup=WasThereACallKeyboard().get_markup(),
+    )
+    await state.set_state(AddStatEntryFlowStates.waiting_for_was_there_a_call)
+
+
+@add_entry_router.message(AddStatEntryFlowStates.waiting_for_was_there_a_call)
+async def was_there_a_call(message: types.Message, state: FSMContext):
+    await state.update_data(was_there_a_call=message.text)
+    await message.answer(
+        "Чи було Євангеліє розказане вперше цій людині?",
+        reply_markup=WasThereGospelKeyboard().get_markup(),
+    )
+    await state.set_state(AddStatEntryFlowStates.waiting_for_was_there_gospel)
+
+
+@add_entry_router.message(AddStatEntryFlowStates.waiting_for_was_there_gospel)
+async def was_there_gospel(message: types.Message, state: FSMContext):
+    await state.update_data(was_there_gospel=message.text)
+    await message.answer(
         "Тепер обери, що це була за зустріч?",
         reply_markup=TypeOfMeetingKeyboard().get_markup(),
     )
@@ -89,7 +111,10 @@ async def meeting_type(message: types.Message, state: FSMContext):
     if message.text in (TypeOfMeetingKeyboardReplies.Worldview.value, TypeOfMeetingKeyboardReplies.Photoquest.value):
         await state.update_data(meeting_type=message.text)
         await state.update_data(step_up_number="0")
-        await message.answer("Можливо, у тебе є якісь коментарі до цієї зустрічі?")
+        await message.answer(
+            "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
+            reply_markup=ReplyKeyboardRemove(),
+        )
         await state.set_state(AddStatEntryFlowStates.waiting_for_comments)
         return
     elif message.text == TypeOfMeetingKeyboardReplies.Stepup.value: 

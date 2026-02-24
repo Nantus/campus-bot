@@ -1,0 +1,19 @@
+from enum import Enum
+from aiogram.types import ReplyKeyboardMarkup
+from aiogram.utils.keyboard import ReplyKeyboardBuilder
+
+
+class WasThereACallKeyboardReplies(Enum):
+    Yes = "Так"
+    No = "Ні"
+
+
+class WasThereACallKeyboard(ReplyKeyboardBuilder): 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.button(text=WasThereACallKeyboardReplies.Yes.value)
+        self.button(text=WasThereACallKeyboardReplies.No.value)
+        self.adjust(2) 
+
+    def get_markup(self, resize_keyboard: bool = True, input_field_placeholder: str = "Оберіть пункт меню...") -> ReplyKeyboardMarkup:
+        return super().as_markup(resize_keyboard=resize_keyboard, input_field_placeholder=input_field_placeholder)
