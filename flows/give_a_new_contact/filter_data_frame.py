@@ -20,7 +20,8 @@ def filter_data_frame(df: pd.DataFrame) -> ContactFound | None:
     first_empty_index = time_framed[time_framed["Хто взяв"].isna() | (time_framed['Хто взяв'].astype(str).str.strip() == "")].index[0]
 
     for idx, row in time_framed.loc[first_empty_index:].iterrows():
-        if row["Можна брати?"] == "Так":
+        value = row["Можна брати?"]
+        if value in ("Так", "") or pd.isna(value):
             return ContactFound(
                 name=row["Твоє ім'я"],
                 telegram=row["Твій нік в тг"],
