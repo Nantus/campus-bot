@@ -18,3 +18,4 @@ class EnumFilter(Filter):
 
     async def __call__(self, message: types.Message) -> bool:
         return message.text == self.command.value
+        

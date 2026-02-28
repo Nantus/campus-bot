@@ -9,3 +9,5 @@
 /ssh
 /fsm_states.db
 /users_data.db
+/write_range_name.txt
+/read_range_name.txt

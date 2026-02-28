@@ -1,13 +1,13 @@
 import sqlite3
 
+
 class Database:
-    def __init__(self, db_file):
+    def __init__(self, db_file: str):
         self.connection = sqlite3.connect(db_file)
         self.cursor = self.connection.cursor()
         self.create_table()
 
     def create_table(self):
-        """Створюємо таблицю користувачів, якщо її ще немає"""
         with self.connection:
             self.cursor.execute("""
                 CREATE TABLE IF NOT EXISTS users (
@@ -16,8 +16,7 @@ class Database:
                 )
             """)
 
-    def set_name(self, user_id, name):
-        """Додаємо або оновлюємо ім'я користувача"""
+    def set_name(self, user_id: int, name: str):
         with self.connection:
             return self.cursor.execute(
                 "INSERT OR REPLACE INTO users (user_id, name) VALUES (?, ?)",
@@ -25,7 +24,6 @@ class Database:
             )
 
     def get_name(self, user_id: int) -> str:
-        """Отримуємо ім'я користувача за його ID"""
         with self.connection:
             result = self.cursor.execute(
                 "SELECT name FROM users WHERE user_id = ?",

@@ -8,6 +8,7 @@ from flows.cancel import cancel_router
 from flows.add_new_entry.add_entry import add_entry_router
 from flows.give_a_new_contact.give_a_new_contact import give_a_new_contact_router 
 from logger.middlewares_logging import LoggingMiddleware 
+from database.get_data_from_file import get_data_from_file
 from logging.handlers import RotatingFileHandler
 
 log_format = '%(asctime)s - %(levelname)s - %(name)s - %(message)s'
@@ -29,13 +30,8 @@ logging.basicConfig(
 logging.basicConfig(level=logging.INFO)
 
 
-def get_token() -> str:
-    with open("tg_token.txt", "r", encoding="utf-8") as file:
-        return file.read().strip()
-
-
 async def main():
-    bot = Bot(token=get_token())
+    bot = Bot(token=get_data_from_file("tg_token.txt"))
     storage = SQLStorage("fsm_states.db")
     dp = Dispatcher(storage=storage)
 

@@ -8,27 +8,18 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
+from database.get_data_from_file import get_data_from_file 
 
-WRITE_RANGE_NAME = "Статистика бот"
-READ_RANGE_NAME = "Реєстрації весна 2026"
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 logger = logging.getLogger("UserActivity")
 
 
-def get_spreadsheet_id() -> str:
-    with open("spreadsheet_id.txt", "r", encoding="utf-8") as file:
-        return file.read().strip()
-
-
-def write_to_google_sheet(data: list):
+def get_credentials(): 
   creds = None
-  # The file token.json stores the user's access and refresh tokens, and is
-  # created automatically when the authorization flow completes for the first
-  # time.
   if os.path.exists("token.json"):
     creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-  # If there are no (valid) credentials available, let the user log in.
+
   if not creds or not creds.valid:
     if creds and creds.expired and creds.refresh_token:
       creds.refresh(Request())
@@ -37,61 +28,44 @@ def write_to_google_sheet(data: list):
           "credentials.json", SCOPES
       )
       creds = flow.run_local_server(port=0)
-    # Save the credentials for the next run
     with open("token.json", "w") as token:
       token.write(creds.to_json())
 
-  try:
-    # Call the Sheets API
-    service = build("sheets", "v4", credentials=creds)
+    return creds
 
-    values = [data]
-    body = {"values": values}
+
+def write_to_google_sheet(data: list):
+  try:
+    service = build("sheets", "v4", credentials=get_credentials())
+
     result = (
         service.spreadsheets()
         .values()
         .append(
-            spreadsheetId=get_spreadsheet_id(),
-            range=WRITE_RANGE_NAME,
+            spreadsheetId=get_data_from_file("spreadsheet_id.txt"),
+            range=get_data_from_file("write_range_name.txt"),
             valueInputOption="USER_ENTERED",
             insertDataOption="INSERT_ROWS",
-            body=body,
+            body={"values": [data]},
         )
         .execute()
     )
     print(f"{result.get("updates").get('updatedCells')} cells updated.")
     return result
   except HttpError as err:
-    print(err)
+    logger.info(err)
 
 
 def read_from_google_sheet() -> pd.DataFrame:
-  creds = None
-  if os.path.exists("token.json"):
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-  # If there are no (valid) credentials available, let the user log in.
-  if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-      creds.refresh(Request())
-    else:
-      flow = InstalledAppFlow.from_client_secrets_file(
-          "credentials.json", SCOPES
-      )
-      creds = flow.run_local_server(port=0)
-    # Save the credentials for the next run
-    with open("token.json", "w") as token:
-      token.write(creds.to_json())
-
   try:
-    # Call the Sheets API
-    service = build("sheets", "v4", credentials=creds)
+    service = build("sheets", "v4", credentials=get_credentials())
 
     values = (
         service.spreadsheets()
         .values()
         .get(
-            spreadsheetId=get_spreadsheet_id(),
-            range=READ_RANGE_NAME,
+            spreadsheetId=get_data_from_file("spreadsheet_id.txt"),
+            range=get_data_from_file("read_range_name.txt"),
         )
         .execute()
     ).get("values", [])
@@ -105,45 +79,24 @@ def read_from_google_sheet() -> pd.DataFrame:
     return pd.DataFrame(data, columns=headers)
 
   except HttpError as err:
-    print(err)
+    logger.info(err)
     return pd.DataFrame()
 
 
 def write_one_cell(column: str, cell_number: int, value: str):
-  creds = None
-  # The file token.json stores the user's access and refresh tokens, and is
-  # created automatically when the authorization flow completes for the first
-  # time.
-  if os.path.exists("token.json"):
-    creds = Credentials.from_authorized_user_file("token.json", SCOPES)
-  # If there are no (valid) credentials available, let the user log in.
-  if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-      creds.refresh(Request())
-    else:
-      flow = InstalledAppFlow.from_client_secrets_file(
-          "credentials.json", SCOPES
-      )
-      creds = flow.run_local_server(port=0)
-    # Save the credentials for the next run
-    with open("token.json", "w") as token:
-      token.write(creds.to_json())
-
   try:
-    # Call the Sheets API
-    service = build("sheets", "v4", credentials=creds)
+    service = build("sheets", "v4", credentials=get_credentials())
 
-    body = {"values": [[value]]}
-    result = (
-        service.spreadsheets()
-        .values()
-        .update(
-            spreadsheetId=get_spreadsheet_id(),
-            range=f"{READ_RANGE_NAME}!{column}{cell_number}",
-            valueInputOption="USER_ENTERED",
-            body=body,
-        )
+    (
+      service.spreadsheets()
+      .values()
+      .update(
+          spreadsheetId=get_data_from_file("spreadsheet_id.txt"),
+          range=f"{get_data_from_file("read_range_name.txt")}!{column}{cell_number}",
+          valueInputOption="USER_ENTERED",
+          body={"values": [[value]]},
+      )
         .execute()
     )
   except HttpError as err:
-    print(err)
+    logger.info(err)

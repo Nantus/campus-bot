@@ -20,4 +20,3 @@ class NewContactKeyboard(ReplyKeyboardBuilder):
 
     def get_markup(self, resize_keyboard: bool = True, input_field_placeholder: str = "Оберіть пункт меню...") -> ReplyKeyboardMarkup:
         return super().as_markup(resize_keyboard=resize_keyboard, input_field_placeholder=input_field_placeholder)
-

@@ -24,7 +24,7 @@ async def cmd_start(message: types.Message, state: FSMContext, bot: Bot):
 
 @registragion_router.message(BotStates.waiting_for_name)
 async def process_name(message: types.Message, state: FSMContext, bot: Bot):
-    user_name = message.text
+    user_name = message.text or ""
     user_id = message.from_user.id if message.from_user else 0
 
     db.set_name(user_id, user_name)
