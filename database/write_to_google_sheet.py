@@ -31,7 +31,7 @@ def get_credentials():
     with open("token.json", "w") as token:
       token.write(creds.to_json())
 
-    return creds
+  return creds
 
 
 def write_to_google_sheet(data: list):
