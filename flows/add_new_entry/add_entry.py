@@ -1,9 +1,12 @@
+import time 
+
 from aiogram import Bot, Router, types
 from aiogram.fsm.context import FSMContext
 
 from chat_states import BotStates
 from commands import BotCommands, EnumFilter
 from database.write_to_google_sheet import write_to_google_sheet
+from flows.add_new_entry.have_comments_keyboard import HaveCommentsKeyboard
 from flows.add_new_entry.states import AddStatEntryFlowStates
 from flows.add_new_entry.is_first_pilot_keyboard import IsFirstPilotKeyboard, IsFirstPilotKeyboardReplies
 from flows.main_menu import enter_main_menu
@@ -105,7 +108,7 @@ async def meeting_type(message: types.Message, state: FSMContext):
         await state.update_data(step_up_number="0")
         await message.answer(
             "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
-            reply_markup=CancelKeyboard().get_markup(),
+            reply_markup=HaveCommentsKeyboard().get_markup(),
         )
         await state.set_state(AddStatEntryFlowStates.waiting_for_comments)
         return
@@ -129,7 +132,7 @@ async def meeting_name(message: types.Message, state: FSMContext):
     await state.update_data(step_up_number="0")
     await message.answer(
         "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
-        reply_markup=CancelKeyboard().get_markup(),
+        reply_markup=HaveCommentsKeyboard().get_markup(),
     )
     await state.set_state(AddStatEntryFlowStates.waiting_for_comments)
 
@@ -140,7 +143,7 @@ async def step_up_number(message: types.Message, state: FSMContext):
     await state.update_data(step_up_number=message.text)
     await message.answer(
         "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
-        reply_markup=CancelKeyboard().get_markup(),
+        reply_markup=HaveCommentsKeyboard().get_markup(),
     )
     await state.set_state(AddStatEntryFlowStates.waiting_for_comments)
 
@@ -149,7 +152,9 @@ async def step_up_number(message: types.Message, state: FSMContext):
 async def comments(message: types.Message, state: FSMContext, bot: Bot):
     await state.update_data(comments=message.text)
     data = await state.get_data() 
-    write_to_google_sheet(list(data.values()))
+    current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    data = [current_time] + list(data.values())
+    write_to_google_sheet(data)
     await message.answer(
         "Зустріч записано. Дякую за твоє служіння!",
     )
