@@ -30,6 +30,11 @@ class Database:
                 (user_id,)
             ).fetchone()
             return result[0] if result else "" 
+    
+    def get_all_users(self):
+        with self.connection:
+            result = self.cursor.execute("SELECT user_id FROM users").fetchall()
+            return [row[0] for row in result]
 
 
 db = Database("users_data.db")

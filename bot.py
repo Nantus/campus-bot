@@ -7,6 +7,8 @@ from flows.registration import registragion_router
 from flows.cancel import cancel_router 
 from flows.add_new_entry.add_entry import add_entry_router
 from flows.give_a_new_contact.give_a_new_contact import give_a_new_contact_router 
+from flows.settings.admin_settings.broadcast_to_all.broadcast_to_all import broadcast_to_all_router 
+from flows.settings.settings import settings_router
 from logger.middlewares_logging import LoggingMiddleware 
 from database.get_data_from_file import get_data_from_file
 from logging.handlers import RotatingFileHandler
@@ -31,7 +33,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 async def main():
-    bot = Bot(token=get_data_from_file("tg_token.txt"))
+    bot = Bot(token=get_data_from_file("tg_token_test.txt"))
     storage = SQLStorage("fsm_states.db")
     dp = Dispatcher(storage=storage)
 
@@ -40,6 +42,8 @@ async def main():
     dp.include_router(registragion_router)
     dp.include_router(add_entry_router)
     dp.include_router(give_a_new_contact_router)
+    dp.include_router(settings_router)
+    dp.include_router(broadcast_to_all_router)
 
     await dp.start_polling(bot)
 

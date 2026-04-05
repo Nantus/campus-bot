@@ -13,7 +13,7 @@ class BotCommands(Enum):
 
 
 class EnumFilter(Filter):
-    def __init__(self, command: BotCommands):
+    def __init__(self, command: Enum):
         self.command = command
 
     async def __call__(self, message: types.Message) -> bool:

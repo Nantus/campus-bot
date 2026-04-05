@@ -1,13 +1,7 @@
 /evn/
-/token.json
-/credentials.json
-/tg_token.txt
-/google_client.txt
+/*.json
+/*.txt
 **/__pycache__/
-/spreadsheet_id.txt
 /logs/
 /ssh
-/fsm_states.db
-/users_data.db
-/write_range_name.txt
-/read_range_name.txt
+/*.db
