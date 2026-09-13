@@ -10,5 +10,7 @@ class AddStatEntryFlowStates(StatesGroup):
     waiting_for_was_there_gospel = State()
     waiting_for_meeting_type = State()
     waiting_for_step_up_number = State()
+    waiting_for_step_up_name = State()
     waiting_for_meeting_name = State()
+    waiting_for_has_agreed_on_stepup = State()
     waiting_for_comments = State()

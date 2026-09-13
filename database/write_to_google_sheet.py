@@ -76,7 +76,13 @@ def read_from_google_sheet() -> pd.DataFrame:
 
     headers = values[0]
     data = values[1:]
-    return pd.DataFrame(data, columns=headers)
+
+    expected_length = len(headers)
+    normalized_data = [
+      row + [""] * (expected_length - len(row)) 
+      for row in data
+    ]
+    return pd.DataFrame(normalized_data, columns=headers)
 
   except HttpError as err:
     logger.info(err)

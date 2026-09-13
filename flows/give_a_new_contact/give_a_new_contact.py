@@ -1,3 +1,5 @@
+import time
+
 from aiogram import Bot, Router, types
 from aiogram.fsm.context import FSMContext
 
@@ -37,6 +39,7 @@ async def acception_reply(message: types.Message, state: FSMContext, bot: Bot):
         data = await state.get_data()
         if row_number := data.get("row_number"):
             write_one_cell("D", row_number, db.get_name(message.from_user.id if message.from_user else 0))
+            write_one_cell("E", row_number, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()))
     elif message.text == NewContactKeyboardReplies.No.value:
         await state.clear()
     await enter_main_menu(message, state, bot)

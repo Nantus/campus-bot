@@ -9,6 +9,7 @@ class TypeOfMeetingKeyboardReplies(Enum):
     Worldview = "Cвітогляд"
     Photoquest = "Фотоквест"
     Stepup = "Степап"
+    Feedback = "Зустріч-відгук"
     Other = "Свій варіант"
 
 
@@ -18,6 +19,7 @@ class TypeOfMeetingKeyboard(ReplyKeyboardBuilder):
         self.button(text=TypeOfMeetingKeyboardReplies.Worldview.value)
         self.button(text=TypeOfMeetingKeyboardReplies.Photoquest.value)
         self.button(text=TypeOfMeetingKeyboardReplies.Stepup.value)
+        self.button(text=TypeOfMeetingKeyboardReplies.Feedback.value)
         self.button(text=TypeOfMeetingKeyboardReplies.Other.value)
         self.button(text=BotCommands.Cancel.value)
         self.adjust(2) 

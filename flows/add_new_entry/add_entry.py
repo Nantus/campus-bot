@@ -6,13 +6,14 @@ from aiogram.fsm.context import FSMContext
 from chat_states import BotStates
 from commands import BotCommands, EnumFilter
 from database.write_to_google_sheet import write_to_google_sheet
+from flows.add_new_entry.has_agreed_on_stepup_keyboard import HasAgreedOnStepupKeyboard
 from flows.add_new_entry.have_comments_keyboard import HaveCommentsKeyboard
 from flows.add_new_entry.states import AddStatEntryFlowStates
 from flows.add_new_entry.is_first_pilot_keyboard import IsFirstPilotKeyboard, IsFirstPilotKeyboardReplies
 from flows.main_menu import enter_main_menu
 from keyboards.cancel_keyboard import CancelKeyboard
 from keyboards.main_keyboard import MainKeyboard
-from flows.add_new_entry.stepup_number_keyboard import StepUpNumberKeyboard
+from flows.add_new_entry.stepup_number_keyboard import StepUpNumberKeyboard, StepUpNumberKeyboardReplies
 from flows.add_new_entry.type_of_meeting_keyboard import TypeOfMeetingKeyboard, TypeOfMeetingKeyboardReplies
 from flows.add_new_entry.was_there_a_call_keyboard import WasThereACallKeyboard
 from flows.add_new_entry.was_there_gospel_keyboard import WasThereGospelKeyboard
@@ -24,6 +25,8 @@ add_entry_router = Router()
 @add_entry_router.message(EnumFilter(BotCommands.AddStatEntry))
 async def add_stat_entry(message: types.Message, state: FSMContext):
     await state.update_data(name=db.get_name(message.from_user.id if message.from_user else 0))
+    await state.update_data(has_agreed_on_stepup="")
+    await state.update_data(step_up_number="")
 
     await message.answer("Давай додамо новий запис про зустріч.")
     await message.answer(
@@ -103,9 +106,8 @@ async def was_there_gospel(message: types.Message, state: FSMContext):
 
 @add_entry_router.message(AddStatEntryFlowStates.waiting_for_meeting_type)
 async def meeting_type(message: types.Message, state: FSMContext):
+    await state.update_data(meeting_type=message.text)
     if message.text in (TypeOfMeetingKeyboardReplies.Worldview.value, TypeOfMeetingKeyboardReplies.Photoquest.value):
-        await state.update_data(meeting_type=message.text)
-        await state.update_data(step_up_number="0")
         await message.answer(
             "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
             reply_markup=HaveCommentsKeyboard().get_markup(),
@@ -118,6 +120,12 @@ async def meeting_type(message: types.Message, state: FSMContext):
             reply_markup=StepUpNumberKeyboard().get_markup(),
         )
         await state.set_state(AddStatEntryFlowStates.waiting_for_step_up_number)
+    elif message.text == TypeOfMeetingKeyboardReplies.Feedback.value: 
+        await message.answer(
+            "Чи студент погодився проходити степ апи?",
+            reply_markup=HasAgreedOnStepupKeyboard().get_markup(),
+        )
+        await state.set_state(AddStatEntryFlowStates.waiting_for_has_agreed_on_stepup)
     else: 
         await message.answer(
             "Напиши, що це була за зустріч.",
@@ -129,7 +137,6 @@ async def meeting_type(message: types.Message, state: FSMContext):
 @add_entry_router.message(AddStatEntryFlowStates.waiting_for_meeting_name)
 async def meeting_name(message: types.Message, state: FSMContext):
     await state.update_data(meeting_type=message.text)
-    await state.update_data(step_up_number="0")
     await message.answer(
         "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
         reply_markup=HaveCommentsKeyboard().get_markup(),
@@ -140,7 +147,34 @@ async def meeting_name(message: types.Message, state: FSMContext):
 @add_entry_router.message(AddStatEntryFlowStates.waiting_for_step_up_number)
 async def step_up_number(message: types.Message, state: FSMContext):
     await state.update_data(meeting_type=TypeOfMeetingKeyboardReplies.Stepup.value)
+    if message.text == StepUpNumberKeyboardReplies.Other.value:
+        await message.answer(
+            "Напиши назву степ апа",
+            reply_markup=CancelKeyboard().get_markup(),
+        )
+        await state.set_state(AddStatEntryFlowStates.waiting_for_step_up_name)
+    else:
+        await state.update_data(step_up_number=message.text)
+        await message.answer(
+            "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
+            reply_markup=HaveCommentsKeyboard().get_markup(),
+        )
+        await state.set_state(AddStatEntryFlowStates.waiting_for_comments)
+
+
+@add_entry_router.message(AddStatEntryFlowStates.waiting_for_step_up_name)
+async def step_up_name(message: types.Message, state: FSMContext):
     await state.update_data(step_up_number=message.text)
+    await message.answer(
+        "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
+        reply_markup=HaveCommentsKeyboard().get_markup(),
+    )
+    await state.set_state(AddStatEntryFlowStates.waiting_for_comments)
+
+
+@add_entry_router.message(AddStatEntryFlowStates.waiting_for_has_agreed_on_stepup)
+async def has_agreed_on_stepup(message: types.Message, state: FSMContext):
+    await state.update_data(has_agreed_on_stepup=message.text)
     await message.answer(
         "Можливо, у тебе є якісь коментарі до цієї зустрічі?",
         reply_markup=HaveCommentsKeyboard().get_markup(),
@@ -153,10 +187,32 @@ async def comments(message: types.Message, state: FSMContext, bot: Bot):
     await state.update_data(comments=message.text)
     data = await state.get_data() 
     current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    data = [current_time] + list(data.values())
+    data = [current_time] + _sort_data_before_write_to_database(data)
     write_to_google_sheet(data)
     await message.answer(
         "Зустріч записано. Дякую за твоє служіння!",
     )
     await state.clear()
     await enter_main_menu(message=message, state=state, bot=bot)
+
+
+def _sort_data_before_write_to_database(data: dict) -> list:
+    sorted_list = []
+    field_names = [
+        "name", 
+        "second_pilon_name", 
+        "student_name", 
+        "student_tg", 
+        "was_there_a_call", 
+        "was_there_gospel", 
+        "meeting_type", 
+        "step_up_number", 
+        "has_agreed_on_stepup", 
+        "comments",
+    ]
+    for field_name in field_names:
+        if value := data.get(field_name):
+            sorted_list.append(value)
+        else:
+            sorted_list.append("")
+    return sorted_list

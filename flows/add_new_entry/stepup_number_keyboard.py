@@ -10,6 +10,7 @@ class StepUpNumberKeyboardReplies(Enum):
     Second = "Другий"
     Third = "Третій"
     Fourth = "Четверий"
+    Other = "Свій варіант"
 
 
 class StepUpNumberKeyboard(ReplyKeyboardBuilder): 
@@ -19,6 +20,7 @@ class StepUpNumberKeyboard(ReplyKeyboardBuilder):
         self.button(text=StepUpNumberKeyboardReplies.Second.value)
         self.button(text=StepUpNumberKeyboardReplies.Third.value)
         self.button(text=StepUpNumberKeyboardReplies.Fourth.value)
+        self.button(text=StepUpNumberKeyboardReplies.Other.value)
         self.button(text=BotCommands.Cancel.value)
         self.adjust(2) 
 

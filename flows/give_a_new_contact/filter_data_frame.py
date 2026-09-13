@@ -1,6 +1,7 @@
-import numpy as np
 import pandas as pd
 from collections import namedtuple
+
+TIMESTAMP_ROW_NAME = "Timestamp" 
 
 
 ContactFound = namedtuple(
@@ -16,9 +17,9 @@ ContactFound = namedtuple(
 
 
 def filter_data_frame(df: pd.DataFrame) -> ContactFound | None:
-    df["Позначка часу"] = pd.to_datetime(df["Позначка часу"], format="%d.%m.%Y %H:%M:%S", errors="coerce")
+    df[TIMESTAMP_ROW_NAME] = pd.to_datetime(df[TIMESTAMP_ROW_NAME], format="%m/%d/%Y %H:%M:%S", errors="coerce")
 
-    mask_date = df["Позначка часу"] > "22.02.2026"
+    mask_date = df[TIMESTAMP_ROW_NAME] > "09/01/2026"
     mask_empty_taken = (df["Хто взяв"].isna()) | (df["Хто взяв"].astype(str).str.strip() == "")
     mask_can_take = (
         (df["Можна брати?"].astype(str).str.strip() == "Так") | 
